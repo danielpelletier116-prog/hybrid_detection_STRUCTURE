@@ -1,0 +1,193 @@
+initialize() {
+	initializeTreeSeq();
+	
+	defineGlobal("startClock", clock());
+	
+	//read samSec (and other multi-value parameters fed to SLiM) from command-line
+	defineConstant("samSec", asInteger(strsplit(SAMSEC, ",")));
+	
+	//define population IDs to be used for allopatric populations
+	defineGlobal("invader", 1);
+	defineGlobal("alloRecPan", 2);
+	defineGlobal("alloRecSub", c(3,4,5));
+	
+	//use samAllo and max(samSec) to know how many sets of 4 sec populations are needed
+	//(how many exist at 1 time), adding an extra 1 just for safety
+	defineGlobal("numSets", 1 + asInteger(ceil(max(samSec)/SAMALLO)));
+	if(numSets > 23) {stop(message = paste0("Too many sets required: ", numSets));}
+	
+	print(paste0("Totals: ", numSets, " sets of pops, ", length(seq(from=0, to=TALLO, by=SAMALLO)), " secCons"));
+	
+	//define next population ID for 2nd contact pan pop (sub are +numSets * c(1,2,3))
+	defineGlobal("nextPanID", 6);
+	
+	//calculate invasion rate for 2nd contact
+	defineConstant("iR", asFloat(NUMINV/N));
+	
+	initializeRecombinationRate(asFloat(R));
+	initializeMutationRate(0);
+	initializeMutationType("m1", 0.5, "f", 0.0);
+	initializeGenomicElementType("g1", m1, 1.0);
+	initializeGenomicElement(g1, 0, asInteger(L)-1);
+}
+
+function (void)logMsg(string message)
+{catn(ifelse(clock() - startClock < 60, asInteger(clock() - startClock) + "s", asInteger(floor((clock() - startClock)/60)) + "m") +
+	": t-" + sim.cycle + " " + message);}
+
+//start burn-in
+1 early() { sim.addSubpop("p0", asInteger(N)); }
+
+//track burn-in progress for debug
+seq(asInteger(TBUR/10), TBUR-asInteger(TBUR/10), by=asInteger(TBUR/10)) late() { logMsg("burnin"); }
+
+//end burn-in, start allopatry
+TBUR early() {
+	logMsg("end burnin");
+	
+	//allo and inv pops are initialized as N new individuals, and 1 tick of 100% migration from p0
+	sim.addSubpop(invader, asInteger(N));
+	sim.addSubpop(alloRecPan, asInteger(N));
+	for(subPop in alloRecSub){
+		sim.addSubpop(subPop, asInteger(N/3));
+	}
+	for(newPop in community.subpopulationsWithIDs(c(invader, alloRecPan, alloRecSub))){
+		newPop.setMigrationRates(0, 1.0);
+	}
+	
+	//initialize all eventual 2nd contact pops, with migration setups so they're continually "copies" of their allopatry parent pops
+	for(secRecPan in 6:(5 + numSets)){
+		sim.addSubpop(secRecPan, asInteger(N));
+		community.subpopulationsWithIDs(secRecPan).setMigrationRates(alloRecPan, 1.0);
+		community.subpopulationsWithIDs(secRecPan).tag = 0;
+		for(parentSub in alloRecSub){
+			secRecSub = secRecPan + (numSets * (parentSub - 2));
+			sim.addSubpop(secRecSub, asInteger(N/3));
+			community.subpopulationsWithIDs(secRecSub).setMigrationRates(alloRecSub, ifelse(alloRecSub == parentSub, 1 - 2*M, M));
+			community.subpopulationsWithIDs(secRecSub).tag = 0;
+		}
+	}
+	
+	logMsg("popIDs range: " + paste(min(sim.subpopulations.id), max(sim.subpopulations.id), sep="-"));
+}
+
+TBUR late() {
+	//stop migration from p0 to allo and inv pops
+	for(newPop in community.subpopulationsWithIDs(c(invader, alloRecPan, alloRecSub))){
+		newPop.setMigrationRates(0, 0.0);
+	}
+	//set migration rates between subpops in substructured population
+	for(dest in community.subpopulationsWithIDs(alloRecSub)){
+		dest.setMigrationRates(alloRecSub[alloRecSub != dest.id], rep(M, 2));
+	}
+	
+	p0.setSubpopulationSize(0); //kill burn-in pop
+}
+
+//remember individuals in allopatry and start a 2nd contact
+seq(TBUR, TBUR+TALLO, by=SAMALLO) late() {
+	
+	//remember allopatry individuals before initializing a 2nd contact, for tracking Fst
+	sim.treeSeqRememberIndividuals(community.subpopulationsWithIDs(c(invader, alloRecPan, alloRecSub)).individuals);
+	
+	//defining popIDs for new 2nd contact subpopulations
+	secRecPan = nextPanID;
+	secRecSub = secRecPan + (numSets * c(1, 2, 3));
+	
+	//save the popIDs of new 2nd contact pops for use next tick
+	defineGlobal("newIDs", c(secRecPan, secRecSub));
+	
+	//increase nextPanID by 1, unless it's over the maximum possible panID (5+numSets); in that case, reset it to 6
+	defineGlobal("nextPanID", ifelse(nextPanID + 1 > 5 + numSets, 6, nextPanID + 1));
+	
+	//print which 2nd contact initialization we're at
+	logMsg("init secCon " + asInteger(((sim.cycle-TBUR)/SAMALLO)+1) + ", popIDs: " + paste(secRecPan, secRecSub));
+	
+	//setup "new" 2nd contact pops
+	for(secPop in community.subpopulationsWithIDs(c(secRecPan, secRecSub))){
+		//get parent popIDs
+		parentPops = secPop.immigrantSubpopIDs;
+		
+		//reset all migration rates
+		secPop.setMigrationRates(sim.subpopulations.id[sim.subpopulations.id != secPop.id], rep(0.0, length(community.allSubpopulations)-1));
+		
+		//start 2nd contact migration (invasion)
+		secPop.setMigrationRates(invader, iR);
+		
+		//continue stocking of recipient pop at m=1-iR for 1 more tick; this way, invasion truly starts with a copy of Allo pop
+		if(secRecPan == secPop.id){
+			secPop.setMigrationRates(parentPops, 1 - iR);
+		}
+		if(any(secRecSub == secPop.id)){
+			//get specific parent subpop ID
+			parentSubpop = alloRecSub[secRecSub == secPop.id];
+			//parent subpop modified m = 1 - iR - 2*M;
+			secPop.setMigrationRates(parentPops, ifelse(parentPops == parentSubpop, 1 - iR - 2*M, M));
+		}
+		//include initialization tick as population tag
+		secPop.tag = sim.cycle;
+	}
+	//logMsg("test stock-inv sources of sec pop " + paste(newIDs[3], community.subpopulationsWithIDs(newIDs[3]).immigrantSubpopIDs));
+	//logMsg("test stock-inv sources of sec pop " + paste(newIDs[3], community.subpopulationsWithIDs(newIDs[3]).immigrantSubpopFractions));
+}
+
+//fully stopping stocking of recipient pops, 1 tick after start of invasion
+seq(TBUR+1, TBUR+TALLO+1, by=SAMALLO) late() {
+	subIDs = newIDs[c(1,2,3)];
+	for(secPop in community.subpopulationsWithIDs(newIDs)){
+		//reset all migration rates
+		secPop.setMigrationRates(sim.subpopulations.id[sim.subpopulations.id != secPop.id], rep(0.0, length(community.allSubpopulations)-1));
+		//reintroduce 2nd contact migration (invasion)
+		secPop.setMigrationRates(invader, iR);
+		//set migration between subs
+		if(any(subIDs == secPop.id)){
+			secPop.setMigrationRates(subIDs[subIDs != secPop.id], rep(M, 2));
+		}
+	}
+	logMsg("stopped stocking of sec pops: " + paste(newIDs));
+	//logMsg("test no-stock inv sources of sec pop " + paste(newIDs[3], community.subpopulationsWithIDs(newIDs[3]).immigrantSubpopIDs));
+	//logMsg("test no-stock inv sources of sec pop " + paste(newIDs[3], community.subpopulationsWithIDs(newIDs[3]).immigrantSubpopFractions));
+}
+
+//2nd contact samples
+(TBUR+min(samSec)):(TBUR+TALLO+max(samSec)) late() {
+	
+	remPopsT = c();
+	kilPopsT = c();
+	
+	//loop through 2nd contact recipient populations to see if any are at a sample time
+	for(pop in community.subpopulationsWithIDs(6 : (5 + (4 * numSets)))){
+		if(any(sim.cycle == pop.tag + samSec)){
+			remPopsT = c(remPopsT, pop.tag);
+			sim.treeSeqRememberIndividuals(pop.individuals);
+			
+			if(sim.cycle == pop.tag + max(samSec)){ //if pop is at its last sample time, "kill" it
+				kilPopsT = c(kilPopsT, pop.tag);
+				//reset all its migrations to be copy of allo pops
+				pop.setMigrationRates(sim.subpopulations.id[sim.subpopulations.id != pop.id], rep(0.0, length(community.allSubpopulations)-1));
+				if(pop.individualCount == N){
+					pop.setMigrationRates(alloRecPan, 1.0);
+				} else {
+					parentSub = alloRecSub[asInteger(floor((pop.id - 6)/numSets)) - 1];
+					pop.setMigrationRates(alloRecSub, ifelse(alloRecSub == parentSub, 1 - 2*M, M));
+				}
+			}
+		}
+	}
+	
+	if(length(remPopsT) > 0){
+		//if any sec pops were remembered, also remember allo pops
+		sim.treeSeqRememberIndividuals(community.subpopulationsWithIDs(c(invader, alloRecPan, alloRecSub)).individuals);
+		logMsg("rem pops from init.secCon ticks " + paste(unique(remPopsT)));
+	}
+	if(length(kilPopsT) > 0){
+		logMsg("kill pops from init.secCon ticks " + paste(unique(kilPopsT)));
+	}
+	
+	if(sim.cycle == (TBUR+TALLO+max(samSec))){ //if at last samSec ever, output treeseq and end simulation
+		logMsg("good job 01a.slim, kill all");
+		sim.subpopulations.setSubpopulationSize(0);
+		sim.treeSeqOutput(paste0("11a.treeSeqs/treeSeq_rep" + simRep + ".trees"));
+		sim.simulationFinished();
+	}
+}

@@ -1,0 +1,23 @@
+#  simulation parameters
+NUMSIMREPS=50   ## number of replicate full simulations to be used for the K2 analyses
+N=1200    ## initial population size
+L=1e5    ## genome size
+U=1.0e-6    ## mutation rate for msprime
+R=1.0e-4    ## recombination rate
+M=0.0005  ## allopatry per-gen migration rate between subpops within a pop
+TBUR=1e5   ## burn-in duration
+TALLO=1000   ## allopatry total duration with last samSec sample happening after end of allo
+SAMALLO=10   ## allopatry sampling time interval
+NUMINV=10   ## average number of invaders per generation during 2nd contact
+SAMSEC="10,30"   ## 2nd contact sampling times
+#  analysis parameters
+TARFST="0.01,0.05,0.1,0.15"   ## allopatry Fst targets for starting secondary contact
+RECINDSAMPSIZE=75    ## number of recipient population individuals sampled
+INVINDSAMPSIZERATIO=1   ## DO NOT USE ratio of indSampSize from invader to recipient pop with minimum of 1 DO NOT USE
+LOCSAMPSIZE=1e5    ## number of genome positions sampled
+#  STRUCTURE analysis parameters
+STRUCMINK=1    ## run STRUCTURE for K from this to STRUCMAXK
+STRUCMAXK=6    ## run STRUCTURE for K from STRUCMINK to this
+STRUCREPS=10    ## number of STRUCTURE replicates for each K
+NUMBURNIN=50000   ## number of STRUCTURE burn-in iterations
+NUMITERATIONS=150000   ## number of STRUCTURE post-burn-in iterations
