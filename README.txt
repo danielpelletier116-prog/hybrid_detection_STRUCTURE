@@ -114,7 +114,7 @@ Script files:
 04.resultsAnalysis.R:
 	This final analysis script is not scheduled in the main pipeline; instead, it's meant to be run locally
 	on the user's computer, only requiring the 23.fullResults_<date>.Rdata and 00b.runParameters.txt files.
-	It produces all plots in folders 13a.plots/ and 13b.QvQplots/, and prints out results for tables.
+	It produces all plots in folders 14a.plots/ and 14b.QvQplots/, and prints out results for tables.
 
 Results file:
 23.fullResults_2026-10-30.Rdata:

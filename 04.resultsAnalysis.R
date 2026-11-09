@@ -2,7 +2,7 @@
 #Requires only 2 files in the working directory:
 # 23.fullResults_"date".Rdata
 # 00b.runParameters.txt
-#It outputs main plots in 13a.plots, QvQ plots in 13b.QvQplots.
+#It outputs main plots in 14a.plots, QvQ plots in 14b.QvQplots.
 #The 0.initialization section must be run first, then any section can be
 # run individually to produce plots and output results.
 #After running section 0, to clean environment between sections, use:
@@ -68,7 +68,7 @@ rm(list = ls()[!ls() %in% notDelete])
 #plots Fig S1, and output Fst-related results for text
 {
 logMsg('start 1.plot Fst')
-dir.create('13a.plots', showWarnings = FALSE)
+dir.create('14a.plots', showWarnings = FALSE)
 
 #make fRef: reference table with info about each row of fData
 fRef <- as.data.frame(do.call(rbind, strsplit(rownames(fData), '_')))
@@ -86,7 +86,7 @@ cols <- c(
   hFst_pan = '#5B8FA8', hFst_sub = '#B1746F', demeHFst_sub = '#3DA873'
 )
 
-png(filename = paste0('13a.plots/s1.Fst.png'), width = 1600, height = 800)
+png(filename = paste0('14a.plots/s1.Fst.png'), width = 1600, height = 800)
 
 par(mar = c(4.1, 4.1, 0.5, 0.5), cex = 2.2)
 
@@ -179,7 +179,7 @@ logMsg('good job 1.plot Fst')
 #plots Fig S2: frequency of deltaK K-selections, for each scenario
 {
 logMsg('start 2.plot deltaK frequency')
-dir.create('13a.plots', showWarnings = FALSE)
+dir.create('14a.plots', showWarnings = FALSE)
 
 #Fig S2: frequency of deltaK K-selections, for each scenario
 {
@@ -207,7 +207,7 @@ widths = c(1.25, 1.5, rep(3.5, 4*length(SAMSEC)))
 heights = c(1, 1, rep(3.5, length(TARFST)), 1.5)
 }
 
-png(filename = '13a.plots/s2.deltaK_freq.png', width = sum(widths)*250, height = sum(heights)*250)
+png(filename = '14a.plots/s2.deltaK_freq.png', width = sum(widths)*250, height = sum(heights)*250)
 layout(layMat, widths = widths, heights = heights)
 par(mar = c(0,0,0,0), cex = 8, xpd = NA, mgp = c(3, 0.5, 0))
 
@@ -292,7 +292,7 @@ logMsg('good job 2.plot deltaK frequency')
 #Using results from K=2 simulation replicates.
 {
 logMsg('start 3.main results section')
-dir.create('13a.plots', showWarnings = FALSE)
+dir.create('14a.plots', showWarnings = FALSE)
 
 ##Fig S3: allo/sec success rate over Q-threshold range, pan only
 {
@@ -316,7 +316,7 @@ qgtH <- c(1, rep(3.5, length(TARFST)), 1.5)
 
 #make plot
 {
-png(filename = paste0('13a.plots/s3.SR_pan.png'), 
+png(filename = paste0('14a.plots/s3.SR_pan.png'), 
     width = sum(qgtW)*100, height = sum(qgtH)*100)
 layout(qgtLm, widths = qgtW, heights = qgtH)
 par(mar = c(0.2, 0, 0.2, 0), cex = 2.5, xpd = NA)
@@ -412,7 +412,7 @@ qgtPH <- c(2, 0.6)
 
 #make plot
 {
-png(filename = paste0('13a.plots/2.SR.png'), 
+png(filename = paste0('14a.plots/2.SR.png'), 
     width = sum(qgtPW)*250, height = sum(qgtPH)*250)
 layout(qgtPLm, widths = qgtPW, heights = qgtPH)
 
@@ -586,7 +586,7 @@ for(tarFst in TARFST){
 
 #make plot
 {
-png(filename = paste0('13a.plots/3.optQT_ranges.png'), 
+png(filename = paste0('14a.plots/3.optQT_ranges.png'), 
     width = 1200, height = 800)
 par(mar = c(0.1, 0.1, 1.1, 0.1), xpd = NA, cex = 3)
 
@@ -651,7 +651,7 @@ sel_optQT <- c('10' = 0.35, '30' = 0.3, 'rest' = 0.1)
 
 #make plot
 {
-png(filename = paste0('13a.plots/s4.SR_sub.png'), 
+png(filename = paste0('14a.plots/s4.SR_sub.png'), 
     width = sum(qgtW)*100, height = sum(qgtH)*100)
 layout(qgtLm, widths = qgtW, heights = qgtH)
 par(mar = c(0.2, 0, 0.2, 0), cex = 2.5, xpd = NA)
@@ -748,7 +748,7 @@ sel_optQT <- c('10' = 0.35, '30' = 0.3, 'rest' = 0.1)
 
 #make plots (one for each strucScenario)
 for(strucScenario in c('pan', 'sub')){
-  png(filename = paste0('13a.plots/s', ifelse(strucScenario == 'pan', 5, 6), '.cID_', strucScenario, '.png'), 
+  png(filename = paste0('14a.plots/s', ifelse(strucScenario == 'pan', 5, 6), '.cID_', strucScenario, '.png'), 
       width = sum(qgtW)*100, height = sum(qgtH)*100)
   layout(qgtLm, widths = qgtW, heights = qgtH)
   par(mar = c(0.2, 0, 0.2, 0), cex = 2.5, xpd = NA)
@@ -889,7 +889,7 @@ labIDs <- c('nat', 'hyb', 'inv')
 
 #make plot
 {
-png(filename = paste0('13a.plots/s7.heatmap.png'), 
+png(filename = paste0('14a.plots/s7.heatmap.png'), 
     width = sum(hpW)*200, height = sum(hpH)*200)
 layout(hpLm, widths = hpW, heights = hpH)
 par(cex = 7, mar = c(0.1, 0.1, 0.1, 0.1), mgp = c(3, 0, 0), xpd = NA)
@@ -1007,14 +1007,14 @@ logMsg('good job 4.plot heatmap using optimal Q-thresholds')
 #proportions. Data plotted for all individuals sampled from simReps that got K=2
 {
 logMsg('start 5.plot QvQ')
-dir.create('13b.QvQplots', showWarnings = FALSE)
+dir.create('14b.QvQplots', showWarnings = FALSE)
 
 #plotting Q-STRUCTURE vs Q-real for the invader pop for each pKey
 #heatmap of all individuals from all simReps (that got K=2) on each plot
 for(tarFst in TARFST){
   for(samSecT in SAMSEC){
     
-    jpeg(filename = paste0('13b.QvQplots/QvQ_K2_', sprintf('%.2f', tarFst), '_', samSecT, '.jpeg'), 
+    jpeg(filename = paste0('14b.QvQplots/QvQ_K2_', sprintf('%.2f', tarFst), '_', samSecT, '.jpeg'), 
          quality = 100, width = 2000, height = 2000)
     layout(
       matrix(c(0, 1, 2, 0, 5, 8, 9, 3, 5, 10, 11, 4, 7, 6, 6, 0), nrow = 4, byrow = T), 
