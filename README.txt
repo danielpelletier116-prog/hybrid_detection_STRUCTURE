@@ -4,18 +4,18 @@ This README.txt file was generated on 2026-10-30 by Daniel Pelletier
 GENERAL INFORMATION
 --------------------
 
-1. Title of Dataset:
+Title of Dataset:
 Scripts and results for the working paper "The program STRUCTURE is good at detecting contemporary hybridization" (working title)
 
-2. Author Contact Information:
+Author Contact Information:
 	Name: Daniel Pelletier
 	Institution:  Simon Fraser University
 	Email: danielpelletier116@gmail.com
 
-3. Date range of data simulation and analysis:
+Date range of data simulation and analysis:
 2025-11-27 to 2026-10-30
 
-4. Information about funding sources that supported the collection of the data: 
+Information about funding sources that supported the collection of the data: 
 The full pipeline was run on the Fir cluster computer of the Digital Research Alliance of Canada.
 Work was supported by funding from NSERC (CGS-M), SFU, and the Maud-Menten Institute.
 
@@ -23,14 +23,14 @@ Work was supported by funding from NSERC (CGS-M), SFU, and the Maud-Menten Insti
 SHARING/ACCESS INFORMATION
 ---------------------------
 
-1. Licenses/restrictions placed on the data:
+Licenses/restrictions placed on the data:
 These data are available under a CC BY 4.0 license <https://creativecommons.org/licenses/by/4.0/> 
 
-2. Links to publications that cite or use the data:
+Links to publications that cite or use the data:
 These scripts and results were generated for the working paper "The program STRUCTURE is good at detecting contemporary hybridization",
 to be submitted for review.
 
-3. Links/relationships to ancillary data sets or software packages:
+Links/relationships to ancillary data sets or software packages:
 Pipeline is designed to be run with the SLURM workload manager: https://slurm.schedmd.com/overview.html
 Simulations and processing of simulated data use the following software and packages:
 	-SLiM v4.3: https://messerlab.org/slim/
@@ -40,7 +40,7 @@ Simulations and processing of simulated data use the following software and pack
 	-R v4.4.0: https://cran.r-project.org/bin/windows/base/old/4.4.0/
 	-hierfstat R package: https://cran.r-project.org/web/packages/hierfstat/index.html
 
-4. Recommended citation for this dataset: 
+Recommended citation for this dataset: 
 To be updated upon dataset archiving in a public repository.
 
 ---------------------
@@ -61,7 +61,7 @@ required jobs have been run successfully. Afterwards, it schedules an R job whic
 processes outputs of all the STRUCTURE jobs. The scheduler doesn't run the final R analysis job, this one
 is meant to be run locally by the user.
 
-Note that terminology used in the paper and in scripts is different in these two cases (see paper for details):
+Note that terminology used in the paper and in scripts is different in two cases (see paper for details):
 	1: The populations and individuals referred to as "native" in the paper are referred to as "recipient" in
 		scripts, abbreviated to "rec".
 	2: The invasion scenarios referred to as "Invasion" and "No-invasion" in the paper are referred to as "Allo"
@@ -78,7 +78,8 @@ The 2nd digit indicates which part of the pipeline the object is relevant to:
 	0: the initialization or top-level organization of the pipeline
 	1: the evolutionary simulation part of the pipeline
 	2: running the STRUCTURE analysis software
-	3: processing STRUCTURE outputs and evaluating the performance of the STRUCTURE software
+	3: processing STRUCTURE outputs, turning them into analysable results
+	4: evaluating the performance of the STRUCTURE software
 The optional letter is just to differentiate multiple files or folders that have the same 2-digit code.
 
 Script files:
@@ -108,11 +109,11 @@ Script files:
 	The second file of general parameters that STRUCTURE needs.
 03.STRUCTUREAnalysis.R:
 	This is run once all STRUCTURE jobs are done. It extracts and processes the outputs from all STRUCTURE jobs,
-	saving them in a large file named 23.fullResults_"date".Rdata, with the date when the file was written in
+	saving them in a large file named 23.fullResults_<date>.Rdata, with the date when the file was written in
 	YYYY-MM-DD format.
 04.resultsAnalysis.R:
 	This final analysis script is not scheduled in the main pipeline; instead, it's meant to be run locally
-	on the user's computer, only requiring the 23.fullResults_"date".Rdata and 00b.runParameters.txt files.
+	on the user's computer, only requiring the 23.fullResults_<date>.Rdata and 00b.runParameters.txt files.
 	It produces all plots in folders 13a.plots/ and 13b.QvQplots/, and prints out results for tables.
 
 Results file:
@@ -138,7 +139,7 @@ Results file:
 	pySeeds: Vector containing the seeds for the python simulation step, ordered by simulation replicate number (1-50).
 	simSeeds: Vector containing the seeds for SLiM simulations, ordered by simulation replicate number (1-50).
 
-Reproducibility of results:
+Reproducibility the full pipeline run that generated the results presented in the paper:
 Seeds for SLiM simulations are in the "simSeeds" vector object, ordered by simulation replicate number (1-50), which can
 	be read in R by loading the	23.fullResults_2026-10-30.Rdata file. 
 Seeds for python simulations are in the "pySeeds" vector object, ordered by simulation replicate number (1-50), which can
